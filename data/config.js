@@ -1,6 +1,6 @@
 /**
  * config.js — Gerado automaticamente pelo Painel Admin
- * Data: 22/06/2026, 11:15:28
+ * Data: 22/06/2026, 11:22:23
  * NÃO EDITE MANUALMENTE — use o painel admin
  */
 const CONFIG = {
@@ -38,7 +38,8 @@ const CONFIG = {
         "ver_afastamentos",
         "ver_vibracoes",
         "ver_conclusao",
-        "filtros_avancados"
+        "filtros_avancados",
+        "editar_assinaturas"
       ]
     }
   ],
