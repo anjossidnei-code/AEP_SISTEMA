@@ -57,11 +57,11 @@ const MAG_MAP = {'MAGNITUDE BAIXA':1,'MAGNITUDE MODERADA':2,'MAGNITUDE ALTA':3};
 const IMP_MAP = {'IMPACTO PROFISSIONAL BAIXO':1,'IMPACTO PROFISSIONAL MODERADO':2,'IMPACTO PROFISSIONAL ALTO':3};
 const SEV_RESULT= {1:'I - Insignificante',2:'II - Pequeno',3:'III - Significante',4:'III - Significante',6:'IV - Grande',9:'V - Catastrófico'};
 const MATRIZ_RISCO = {
-  'A':{I:'Grau I',II:'Grau I',III:'Grau II',IV:'Grau II',V:'Grau III'},
-  'B':{I:'Grau I',II:'Grau II',III:'Grau II',IV:'Grau III',V:'Grau IV'},
-  'C':{I:'Grau II',II:'Grau II',III:'Grau III',IV:'Grau IV',V:'Grau IV'},
-  'D':{I:'Grau II',II:'Grau III',III:'Grau IV',IV:'Grau IV',V:'Grau V'},
-  'E':{I:'Grau III',II:'Grau IV',III:'Grau IV',IV:'Grau V',V:'Grau V'},
+  'A':{'I':'Grau I', 'II':'Grau I',  'III':'Grau II', 'IV':'Grau II', 'V':'Grau III'},
+  'B':{'I':'Grau I', 'II':'Grau II', 'III':'Grau II', 'IV':'Grau III','V':'Grau IV'},
+  'C':{'I':'Grau II','II':'Grau II', 'III':'Grau III','IV':'Grau IV', 'V':'Grau IV'},
+  'D':{'I':'Grau II','II':'Grau III','III':'Grau IV', 'IV':'Grau IV', 'V':'Grau V'},
+  'E':{'I':'Grau III','II':'Grau IV','III':'Grau IV', 'IV':'Grau V',  'V':'Grau V'},
 };
 
 function calcRisk(row) {
@@ -74,7 +74,7 @@ function calcRisk(row) {
   const prob = PROB_RESULT[pn] || row.probabilidade || '';
   const sev  = SEV_RESULT[sn]  || row.severidade   || '';
   const pk = prob.charAt(0);
-  const sk = sev.split('-')[0].trim();
+  const sk = sev.split(/[-–]/)[0].trim();
   const grau = (MATRIZ_RISCO[pk]||{})[sk] || row.grau || '';
   return { prob_int:pi, prob_freq:pf, probabilidade:prob, sev_mag:sm, sev_imp:si, severidade:sev, grau };
 }
