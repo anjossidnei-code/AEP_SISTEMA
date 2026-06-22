@@ -4400,22 +4400,22 @@ showWelcomeScreen();
 })();
 
 function loadEmpresaFromConfig(emp) {
-  // Pre-fill EMPRESA global
   if (!emp) return;
+
+  // Pre-fill EMPRESA global
   if (emp.nome)  EMPRESA.nome  = emp.nome;
   if (emp.cnpj)  EMPRESA.cnpj  = emp.cnpj;
-  
+
   // Set logo
   if (emp.logo) {
     LOGO_EMPRESA = emp.logo;
-    // Update logo area if visible
     var la = document.getElementById('logo-area');
     if (la) la.innerHTML = '<img src="' + emp.logo + '" alt="Logo" style="max-height:52px;max-width:110px;object-fit:contain">';
   }
 
   // Set responsáveis/assinaturas
   if (emp.responsaveis && emp.responsaveis.length) {
-    Object.keys(ASSINATURAS).forEach(k => delete ASSINATURAS[k]);
+    Object.keys(ASSINATURAS).forEach(function(k) { delete ASSINATURAS[k]; });
     emp.responsaveis.forEach(function(r, i) {
       var key = 'resp' + (i + 1);
       ASSINATURAS[key] = {
@@ -4428,12 +4428,67 @@ function loadEmpresaFromConfig(emp) {
     });
   }
 
-  // Update sidebar
+  // Update sidebar + topbar
   var sb = document.getElementById('sb-company');
   if (sb) sb.textContent = emp.nome ? emp.nome.substring(0, 32) : 'Empresa';
-
   var tm = document.getElementById('topbar-meta');
   if (tm) tm.textContent = (emp.nome || 'AEP') + ' • ' + new Date().getFullYear();
+
+  // ── AUTO-LOAD PLANILHA if embedded in config ──
+  if (emp.planilha && emp.planilha.base64) {
+    try {
+      showToast('Carregando planilha da empresa…', 'info');
+
+      // Convert base64 → ArrayBuffer
+      var b64 = emp.planilha.base64;
+      var binary = atob(b64);
+      var bytes = new Uint8Array(binary.length);
+      for (var i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      var arr = bytes.buffer;
+
+      // Parse with XLSX
+      var wb = XLSX.read(arr, { type: 'array', cellDates: false, raw: true });
+      console.log('Planilha da empresa carregada:', wb.SheetNames);
+
+      // Parse all sheets
+      var invSheet = findSheet(wb, ['inventário', 'inventario', 'invent']);
+      if (!invSheet) {
+        showToast('Planilha inválida: aba Inventário não encontrada.', 'error');
+        return;
+      }
+      var rows = parseInventarioSheet(invSheet);
+
+      var idS  = findSheet(wb, ['identifica']); if (idS)  parseEmpresaSheet(idS);
+      var empS = findSheet(wb, ['empregado']);   if (empS) parseEmpregadosSheet(empS);
+      var ativS= findSheet(wb, ['atividade']);   if (ativS)parseAtividadeSheet(ativS);
+      var afS  = findSheet(wb, ['afastamento']); if (afS)  parseAfastamentosSheet(afS);
+      var vibS = findSheet(wb, ['vibra']);       if (vibS) parseVibracoesSheet(vibS);
+      var plS  = findSheet(wb, ['plano']);       if (plS)  parsePlanoSheet(plS);
+
+      // Override empresa data with config (logo/responsáveis from admin take priority)
+      if (emp.nome) EMPRESA.nome = emp.nome;
+      if (emp.cnpj) EMPRESA.cnpj = emp.cnpj;
+
+      // Re-apply logo (parseEmpresaSheet may have overwritten it)
+      if (emp.logo) {
+        LOGO_EMPRESA = emp.logo;
+        var la2 = document.getElementById('logo-area');
+        if (la2) la2.innerHTML = '<img src="' + emp.logo + '" alt="Logo" style="max-height:52px;max-width:110px;object-fit:contain">';
+      }
+
+      // Reset filters and generate document
+      resetFiltersUI();
+      initWithData(rows);
+      gerarDocumento();
+
+      showToast('✓ Planilha carregada: ' + rows.length + ' riscos', 'success');
+    } catch(err) {
+      console.error('Erro ao carregar planilha da empresa:', err);
+      showToast('Erro ao carregar planilha. Importe manualmente.', 'error');
+    }
+  }
 }
 
 function applyPermissoes(perms) {
